@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注音聽力與聽寫訓練系統 - 康軒版</title>
+  <style>
+    :root {
+      --primary: #4A90E2;
+      --secondary: #50E3C2;
+      --accent: #FF6B6B;
+      --warning: #F5A623;
+      --bg: #F0F4F8;
+      --card-bg: #FFFFFF;
+      --text: #2C3E50;
+    }
+
+    * { box-sizing: border-box; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    body { margin: 0; padding: 0; background-color: var(--bg); color: var(--text); }
+
+    /* Header & Navigation */
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header-title { font-size: 1.4rem; font-weight: bold; }
+    .nav-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
+    .nav-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid white;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.2s;
+    }
+    .nav-btn:hover, .nav-btn.active { background: white; color: var(--primary); font-weight: bold; }
+
+    /* Speech Controls Panel */
+    .speech-controls {
+      background: #E1ECF4;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #D0E0EC;
+    }
+    .speech-controls label { font-weight: bold; }
+    .speech-controls select, .speech-controls input {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #CCC;
+    }
+
+    /* Layout Containers */
+    .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+    .view-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+      display: none;
+    }
+    .view-card.active { display: block; }
+
+    /* Common UI Elements */
+    .btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+    .btn:hover { background-color: #357ABD; }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background-color: var(--secondary); color: #155724; }
+    .btn-warning { background-color: var(--warning); color: white; }
+    .btn-danger { background-color: var(--accent); color: white; }
+
+    /* Top Stats Bar */
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      background: #F8FAFC;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #E2E8F0;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+    .audio-replay-btn {
+      background: var(--warning);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 1.4rem;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(245, 166, 35, 0.4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* MCQ Grid */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .option-card {
+      background: #F1F5F9;
+      border: 3px solid #CBD5E1;
+      border-radius: 16px;
+      padding: 25px 10px;
+      font-size: 2rem;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text);
+    }
+    .option-card:hover { border-color: var(--primary); background: #E0F2FE; }
+
+    /* Handwriting Layout */
+    .handwriting-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 15px;
+    }
+    .canvas-box {
+      border: 3px dashed var(--primary);
+      border-radius: 16px;
+      background: #FFF;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    .answer-panel {
+      flex: 1;
+      min-width: 250px;
+      background: #FFFBEB;
+      border: 3px solid #FCD34D;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+    }
+    .answer-panel.visible { visibility: visible; }
+    .answer-bopomofo { font-size: 2.8rem; font-weight: bold; color: var(--accent); margin-bottom: 10px; text-align: center; }
+
+    /* Batch Grading Grid */
+    .grading-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid #E2E8F0;
+      gap: 15px;
+    }
+    .grading-img { border: 1px solid #CCC; border-radius: 8px; background: white; }
+
+    /* Store & Rewards */
+    .reward-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .star-badge { color: #D97706; font-size: 1.2rem; font-weight: bold; }
+    
+    .word-manage-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #E2E8F0;
+      padding: 6px 12px;
+      border-radius: 8px;
+      margin: 4px;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-title">🎒 注音聽力與聽寫訓練系統 (康軒特寫版)</div>
+    <div class="nav-btns">
+      <button class="nav-btn active" onclick="switchView('view-menu')">🏠 首頁選單</button>
+      <button class="nav-btn" onclick="switchView('view-rewards')">⭐ 獎勵兌換 (<span id="star-count-nav">0</span>)</button>
+      <button class="nav-btn" onclick="switchView('view-wrong-bank')">📖 錯題本 (<span id="wrong-count-nav">0</span>)</button>
+      <button class="nav-btn" onclick="openParentAdmin()">🔒 家長金庫</button>
+    </div>
+  </header>
+
+  <!-- Speech Settings Bar -->
+  <div class="speech-controls">
+    <div>
+      <label>🔊 語速控制：</label>
+      <input type="range" id="speech-rate" min="0.4" max="1.0" step="0.05" value="0.65" onchange="updateRateLabel(this.value)">
+      <span id="rate-val">0.65x (慢速)</span>
+    </div>
+    <div>
+      <label>🗣️ 語音聲音庫：</label>
+      <select id="voice-select"></select>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- 1. MAIN MENU VIEW -->
+    <div id="view-menu" class="view-card active">
+      <h2 style="text-align:center; color: var(--primary);">🎯 請選擇練習模式</h2>
+      
+      <div style="margin: 20px 0;">
+        <h3>1. 選擇練習對象：</h3>
+        <label><input type="radio" name="mode-target" value="single" checked> 🔤 單注音符號 (37音)</label><br><br>
+        <label><input type="radio" name="mode-target" value="word"> 📝 2-3 字詞語注音 (全注音標記，含康軒詞庫)</label>
+      </div>
+
+      <div style="margin: 20px 0;">
+        <h3>2. 選擇題型：</h3>
+        <label><input type="radio" name="mode-type" value="mcq" checked> 🔘 聽音選字卡 (選擇題)</label><br><br>
+        <label><input type="radio" name="mode-type" value="handwriting"> ✍️ 聽寫魔法板 (手寫題)</label>
+      </div>
+
+      <div style="margin: 20px 0;">
+        <h3>3. 題目來源：</h3>
+        <label><input type="radio" name="mode-source" value="all" checked> 🎲 題庫隨機抽題</label><br><br>
+        <label><input type="radio" name="mode-source" value="wrong"> 🎯 專門練習錯題本 (<span id="wrong-count-menu">0</span> 題)</label>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px;">
+        <button class="btn btn-secondary" style="font-size: 1.2rem; padding: 12px 36px;" onclick="startPractice()">🚀 開始練習</button>
+      </div>
+    </div>
+
+    <!-- 2. MCQ PRACTICE VIEW -->
+    <div id="view-mcq" class="view-card">
+      <div class="stats-bar">
+        <div>題數: <span id="mcq-q-count">1</span>/10</div>
+        <div>正確率: <span id="mcq-accuracy">100</span>%</div>
+        <div>用時: <span id="mcq-timer">00:00</span></div>
+        <button class="audio-replay-btn" onclick="replayAudio()" title="重播聲音">🔊</button>
+      </div>
+      <div id="mcq-prompt" style="text-align:center; font-size: 1.2rem; color: #64748B; margin-bottom: 15px;">請聽語音並選出正確注音：</div>
+      <div class="options-grid" id="options-container"></div>
+      <div style="text-align: center; margin-top: 25px;">
+        <button class="btn btn-danger" onclick="endPractice()">結束練習</button>
+      </div>
+    </div>
+
+    <!-- 3. HANDWRITING VIEW -->
+    <div id="view-handwriting" class="view-card">
+      <div class="stats-bar">
+        <div>題數: <span id="hw-q-count">1</span>/10</div>
+        <div>用時: <span id="hw-timer">00:00</span></div>
+        <button class="audio-replay-btn" onclick="replayAudio()" title="重播聲音">🔊</button>
+      </div>
+      <div style="text-align:center; color: #64748B; margin-bottom: 10px;">請聽聲音，並在下方畫布上寫出注音：</div>
+
+      <div class="handwriting-container">
+        <div>
+          <canvas id="hw-canvas" class="canvas-box" width="340" height="300"></canvas>
+          <div style="margin-top: 8px; display: flex; gap: 8px; justify-content: center;">
+            <button class="btn" style="padding: 6px 16px; font-size: 0.9rem;" onclick="clearCanvas()">🧹 重寫/擦除</button>
+          </div>
+        </div>
+        <div id="answer-panel" class="answer-panel">
+          <div style="color: #92400E; font-weight: bold; margin-bottom: 8px;">正確答案：</div>
+          <div id="answer-bopomofo" class="answer-bopomofo">ㄅ</div>
+          <div style="font-size: 0.85rem; color: #B45309; text-align: center;">家長請點擊下方按鈕記錄結果</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 25px; display: flex; justify-content: center; gap: 15px;">
+        <button class="btn btn-warning" onclick="revealAnswer()">👁️ 對答案</button>
+        <button class="btn btn-secondary" id="hw-next-btn" onclick="nextHandwritingQuestion()" style="display:none;">下一題 ➔</button>
+        <button class="btn btn-danger" onclick="finishHandwritingSession()">完成本組練習並結算</button>
+      </div>
+    </div>
+
+    <!-- 4. BATCH GRADING VIEW -->
+    <div id="view-batch-grading" class="view-card">
+      <h2 style="text-align:center; color: var(--primary);">📋 家長批量批改頁面</h2>
+      <p style="text-align:center; color: #64748B;">請核對孩子的筆跡與正確答案，勾選結果以更新正確率與錯題本：</p>
+      <div id="grading-list" style="margin: 20px 0;"></div>
+      <div style="text-align:center;">
+        <button class="btn btn-secondary" onclick="submitBatchGrading()">✔ 提交批改結果並領取星星</button>
+      </div>
+    </div>
+
+    <!-- 5. REWARDS VIEW -->
+    <div id="view-rewards" class="view-card">
+      <h2 style="text-align:center; color: #D97706;">⭐ 實體獎勵兌換中心</h2>
+      <div style="text-align:center; font-size: 1.3rem; margin-bottom: 20px;">目前擁有星星：<span id="star-count-display" style="font-size: 2rem; color: #D97706; font-weight:bold;">0</span> 顆</div>
+      <div id="rewards-list"></div>
+    </div>
+
+    <!-- 6. WRONG BANK VIEW -->
+    <div id="view-wrong-bank" class="view-card">
+      <h2 style="text-align:center; color: var(--accent);">📖 錯題紀錄本</h2>
+      <p style="text-align:center; color: #64748B;">這裡記錄了選擇題選錯或聽寫批改錯誤的題目：</p>
+      <div id="wrong-bank-list" style="margin: 20px 0;"></div>
+      <div style="text-align:center; display: flex; justify-content: center; gap: 15px;">
+        <button class="btn btn-secondary" onclick="startWrongPractice()">🎯 開始錯題特訓</button>
+        <button class="btn btn-danger" onclick="clearWrongBank()">🧹 清空錯題本</button>
+      </div>
+    </div>
+
+    <!-- 7. PARENT ADMIN VIEW -->
+    <div id="view-parent-admin" class="view-card">
+      <h2 style="text-align:center; color: var(--primary);">🔒 家長密碼金庫與詞庫管理後台</h2>
+      <div id="parent-auth" style="text-align:center; margin: 30px 0;">
+        <p>請輸入 4 位數家長密碼（預設為 1234）：</p>
+        <input type="password" id="parent-pass-input" style="font-size: 1.5rem; width: 150px; text-align:center; padding: 5px; border-radius: 8px; border: 1px solid #CCC;"><br><br>
+        <button class="btn" onclick="checkParentPassword()">解鎖金庫</button>
+      </div>
+
+      <div id="parent-content" style="display:none;">
+        
+        <!-- 詞庫管理區 (全新重點功能) -->
+        <h3>📚 1. 國語詞庫管理 (現有 <span id="word-count-badge">0</span> 個詞語)：</h3>
+        
+        <div style="background: #F1F5F9; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+          <h4 style="margin-top:0;">➕ 單筆新增詞語：</h4>
+          <div style="display:flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+            <input type="text" id="add-word-bopo" placeholder="注音 (例如：ㄌㄠˇ ㄕ)" style="flex:2; min-width: 150px; padding: 8px; border-radius: 6px; border: 1px solid #CCC;">
+            <input type="text" id="add-word-tts" placeholder="國字/朗讀文字 (例如：老師)" style="flex:2; min-width: 150px; padding: 8px; border-radius: 6px; border: 1px solid #CCC;">
+            <button class="btn btn-secondary" onclick="addSingleWord()">新增詞語</button>
+          </div>
+          
+          <h4 style="margin-bottom: 5px;">📥 批量文字匯入 (多行)：</h4>
+          <p style="font-size:0.85rem; color:#64748B; margin-top:0;">格式：每一行輸入「注音,國字」（中間用逗號隔開）</p>
+          <textarea id="batch-word-input" rows="4" style="width:100%; border-radius:8px; border:1px solid #CCC; padding:8px;" placeholder="ㄌㄠˇ ㄕ,老師&#10;ㄒㄧㄠˇ ㄆㄥˊ ㄧㄡˇ,小朋友&#10;ㄗㄠˇ ㄢ,早安"></textarea>
+          <div style="text-align:right; margin-top:8px;">
+            <button class="btn btn-secondary" onclick="importBatchWords()">批次匯入詞庫</button>
+          </div>
+        </div>
+
+        <div>
+          <h4>📜 現有詞語清單：</h4>
+          <div id="word-list-container" style="max-height: 200px; overflow-y: auto; border: 1px solid #E2E8F0; padding: 10px; border-radius: 8px;"></div>
+          <div style="margin-top:10px; text-align:right;">
+            <button class="btn btn-warning" onclick="resetDefaultWords()">🔄 恢復康軒預設詞庫</button>
+          </div>
+        </div>
+
+        <hr style="margin: 25px 0; border: none; border-top: 1px solid #E2E8F0;">
+
+        <h3>⭐ 2. 星星數手動調整：</h3>
+        <div style="display:flex; align-items:center; gap: 10px;">
+          <span>目前星星：</span>
+          <button class="btn btn-danger" onclick="adjustStars(-5)">-5</button>
+          <button class="btn btn-danger" onclick="adjustStars(-1)">-1</button>
+          <span id="admin-star-val" style="font-size: 1.4rem; font-weight: bold; width: 50px; text-align:center;">0</span>
+          <button class="btn btn-secondary" onclick="adjustStars(1)">+1</button>
+          <button class="btn btn-secondary" onclick="adjustStars(5)">+5</button>
+        </div>
+
+        <hr style="margin: 25px 0; border: none; border-top: 1px solid #E2E8F0;">
+
+        <h3>🎁 3. 實體獎勵項目編輯：</h3>
+        <div style="display:flex; gap: 10px; margin-bottom: 15px;">
+          <input type="text" id="new-reward-title" placeholder="獎勵名稱 (例如：看電視30分鐘)" style="flex:2; padding: 8px; border-radius: 6px; border: 1px solid #CCC;">
+          <input type="number" id="new-reward-cost" placeholder="所需星星" style="flex:1; padding: 8px; border-radius: 6px; border: 1px solid #CCC;">
+          <button class="btn btn-secondary" onclick="addRewardItem()">新增項目</button>
+        </div>
+        <div id="admin-rewards-list"></div>
+
+        <hr style="margin: 25px 0; border: none; border-top: 1px solid #E2E8F0;">
+
+        <h3>🔑 4. 修改家長密碼：</h3>
+        <div style="display:flex; gap: 10px;">
+          <input type="password" id="new-parent-pass" placeholder="新 4 位數密碼" style="padding: 8px; border-radius: 6px; border: 1px solid #CCC;">
+          <button class="btn" onclick="changeParentPassword()">更新密碼</button>
+        </div>
+		
+		<!-- ⬇️ ⬇️ ⬇️ 請將下面這段程式碼「直接貼在下方」 ⬇️ ⬇️ ⬇️ -->
+        <hr style="margin: 25px 0; border: none; border-top: 1px solid #E2E8F0;">
+
+        <h3>💾 5. 完整資料備份與備份還原：</h3>
+        <div style="display:flex; gap: 10px;">
+          <button class="btn btn-secondary" onclick="exportDataBackup()">📥 下載備份檔 (.json)</button>
+          <button class="btn btn-warning" onclick="document.getElementById('import-file-input').click()">📤 匯入備份檔</button>
+          <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importDataBackup(event)">
+        </div>
+        <!-- ⬆️ ⬆️ ⬆️ 貼上結束 ⬆️ ⬆️ ⬆️ -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- Global Data Arrays & Defaults ---
+    const SINGLE_BOPOMOFO = [
+      'ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ','ㄏ',
+      'ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ','ㄙ',
+      'ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ',
+      'ㄧ','ㄨ','ㄩ'
+    ];
+
+    // 康軒國語首冊 / 一上常見基礎詞庫預設資料
+    const DEFAULT_KANGXUAN_WORDS = [
+      { bopomofo: "ㄌㄠˇ ㄕ", tts: "老師" },
+      { bopomofo: "ㄒㄧㄠˇ ㄆㄥˊ ㄧㄡˇ", tts: "小朋友" },
+      { bopomofo: "ㄗㄠˇ ㄢ", tts: "早安" },
+      { bopomofo: "ㄎㄞ ㄒㄩㄝˊ", tts: "開學" },
+      { bopomofo: "ㄆㄞ ㄕㄡˇ", tts: "拍手" },
+      { bopomofo: "ㄉㄨˊ ㄕㄨ", tts: "讀書" },
+      { bopomofo: "ㄒㄧㄝˇ ㄗˋ", tts: "寫字" },
+      { bopomofo: "ㄊㄧㄠˋ ㄨˇ", tts: "跳舞" },
+      { bopomofo: "ㄆㄠˇ ㄅㄨˋ", tts: "跑步" },
+      { bopomofo: "ㄔㄤˋ ㄍㄜ", tts: "唱歌" },
+      { bopomofo: "ㄎㄨㄞˋ ㄌㄜˋ", tts: "快樂" },
+      { bopomofo: "ㄍㄠ ㄒㄧㄥˋ", tts: "高興" },
+      { bopomofo: "ㄒㄧㄠˇ ㄋㄧㄠˇ", tts: "小鳥" },
+      { bopomofo: "ㄑㄧㄥ ㄨㄚ", tts: "青蛙" },
+      { bopomofo: "ㄏㄨˊ ㄉㄧㄝˊ", tts: "蝴蝶" },
+      { bopomofo: "ㄏㄨㄚ ㄉㄨㄛˇ", tts: "花朵" },
+      { bopomofo: "ㄉㄚˋ ㄕㄨˋ", tts: "大樹" },
+      { bopomofo: "ㄅㄞˊ ㄩㄣˊ", tts: "白雲" },
+      { bopomofo: "ㄒㄧㄚˋ ㄩˇ", tts: "下雨" },
+      { bopomofo: "ㄊㄞˋ ㄧㄤˊ", tts: "太陽" },
+      { bopomofo: "ㄩㄝˋ ㄌㄧㄤ˙", tts: "月亮" },
+      { bopomofo: "ㄒㄧㄥ ㄒㄧㄥ", tts: "星星" },
+      { bopomofo: "ㄆㄧˊ ㄑㄧㄡˊ", tts: "皮球" },
+      { bopomofo: "ㄐㄧ ㄇㄨˋ", tts: "積木" },
+      { bopomofo: "ㄨㄢˊ ㄐㄩˋ", tts: "玩具" },
+      { bopomofo: "ㄅㄚˋ ㄅㄚ˙", tts: "爸爸" },
+      { bopomofo: "ㄇㄚ ㄇㄚ˙", tts: "媽媽" },
+      { bopomofo: "ㄍㄜ ㄍㄜ˙", tts: "哥哥" },
+      { bopomofo: "ㄐㄧㄝˇ ㄐㄧㄝ˙", tts: "姊姊" },
+      { bopomofo: "ㄉㄧˋ ㄉㄧ˙", tts: "弟弟" },
+      { bopomofo: "ㄇㄟˋ ㄇㄟ˙", tts: "妹妹" },
+      { bopomofo: "ㄆㄧㄥˊ ㄍㄨㄛˇ", tts: "蘋果" },
+      { bopomofo: "ㄉㄚˋ ㄒㄧㄤˋ", tts: "大象" },
+      { bopomofo: "ㄒㄧㄠˇ ㄍㄡˇ", tts: "小狗" },
+      { bopomofo: "ㄑㄧˋ ㄔㄜ", tts: "汽車" },
+      { bopomofo: "ㄒㄧ ㄍㄨㄚ", tts: "西瓜" },
+      { bopomofo: "ㄇㄠ ㄇㄧ", tts: "貓咪" },
+      { bopomofo: "ㄊㄨˋ ㄗ˙", tts: "兔子" },
+      { bopomofo: "ㄏㄨㄛˇ ㄔㄜ", tts: "火車" },
+      { bopomofo: "ㄈㄟ ㄐㄧ", tts: "飛機" }
+    ];
+
+    // --- LocalStorage State Initialization ---
+    let stars = parseInt(localStorage.getItem('bopo_stars') || '0');
+    let wrongBank = JSON.parse(localStorage.getItem('bopo_wrong_bank') || '[]');
+    let wordList = JSON.parse(localStorage.getItem('bopo_word_list') || JSON.stringify(DEFAULT_KANGXUAN_WORDS));
+    let rewards = JSON.parse(localStorage.getItem('bopo_rewards') || JSON.stringify([
+      { id: 1, title: '看電視 20 分鐘', cost: 30 },
+      { id: 2, title: '吃冰淇淋一支', cost: 50 },
+      { id: 3, title: '買小玩具一份', cost: 100 }
+    ]));
+    let parentPass = localStorage.getItem('bopo_parent_pass') || '1234';
+
+    let currentSession = {
+      targetMode: 'single',
+      typeMode: 'mcq',
+      sourceMode: 'all',
+      questions: [],
+      currentIndex: 0,
+      correctCount: 0,
+      startTime: null,
+      timerInterval: null,
+      batchDrawings: []
+    };
+
+    let synth = window.speechSynthesis;
+    let selectedVoice = null;
+    let canvas, ctx, isDrawing = false;
+
+    // --- Initialization ---
+    window.onload = function() {
+      initSpeech();
+      initCanvas();
+      updateNavBadges();
+      renderRewardsList();
+      renderWrongBankList();
+    };
+
+    // --- Web Speech API Controls ---
+    function initSpeech() {
+      function populateVoices() {
+        let voices = synth.getVoices();
+        let voiceSelect = document.getElementById('voice-select');
+        voiceSelect.innerHTML = '';
+        
+        let zhVoices = voices.filter(v => v.lang.includes('zh-TW') || v.lang.includes('zh'));
+        if (zhVoices.length === 0) zhVoices = voices;
+
+        zhVoices.forEach((v, index) => {
+          let opt = document.createElement('option');
+          opt.value = index;
+          opt.textContent = `${v.name} (${v.lang})`;
+          if (v.lang.includes('zh-TW')) opt.selected = true;
+          voiceSelect.appendChild(opt);
+        });
+
+        selectedVoice = zhVoices[voiceSelect.selectedIndex] || voices[0];
+        voiceSelect.onchange = () => { selectedVoice = zhVoices[voiceSelect.selectedIndex]; };
+      }
+
+      populateVoices();
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = populateVoices;
+      }
+    }
+
+    function speak(text, callback) {
+      if (synth.speaking) synth.cancel();
+      let utter = new SpeechSynthesisUtterance(text);
+      let rate = parseFloat(document.getElementById('speech-rate').value);
+      utter.rate = rate;
+      if (selectedVoice) utter.voice = selectedVoice;
+      if (callback) utter.onend = callback;
+      synth.speak(utter);
+    }
+
+    function updateRateLabel(val) {
+      document.getElementById('rate-val').textContent = `${val}x (${val < 0.7 ? '慢速' : '正常'})`;
+    }
+
+    function replayAudio() {
+      let q = currentSession.questions[currentSession.currentIndex];
+      if (q) speak(q.tts);
+    }
+
+    // --- Navigation ---
+    function switchView(viewId) {
+      document.querySelectorAll('.view-card').forEach(card => card.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      
+      let targetView = document.getElementById(viewId);
+      if (targetView) targetView.classList.add('active');
+      
+      if (viewId === 'view-wrong-bank') renderWrongBankList();
+      if (viewId === 'view-rewards') renderRewardsList();
+    }
+
+    function updateNavBadges() {
+      document.getElementById('star-count-nav').textContent = stars;
+      document.getElementById('star-count-display').textContent = stars;
+      document.getElementById('admin-star-val').textContent = stars;
+      document.getElementById('wrong-count-nav').textContent = wrongBank.length;
+      document.getElementById('wrong-count-menu').textContent = wrongBank.length;
+      document.getElementById('word-count-badge').textContent = wordList.length;
+      
+      localStorage.setItem('bopo_stars', stars);
+      localStorage.setItem('bopo_wrong_bank', JSON.stringify(wrongBank));
+      localStorage.setItem('bopo_word_list', JSON.stringify(wordList));
+    }
+
+    function playAudioTone(freq, type, duration) {
+      try {
+        let ctx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+        osc.stop(ctx.currentTime + duration);
+      } catch(e) {}
+    }
+
+    // --- Practice Setup & Timer ---
+    function startPractice() {
+      let targetMode = document.querySelector('input[name="mode-target"]:checked').value;
+      let typeMode = document.querySelector('input[name="mode-type"]:checked').value;
+      let sourceMode = document.querySelector('input[name="mode-source"]:checked').value;
+
+      if (sourceMode === 'wrong' && wrongBank.length === 0) {
+        alert("目前的錯題本是空的，將為您切換至題庫隨機抽題！");
+        sourceMode = 'all';
+      }
+
+      currentSession.targetMode = targetMode;
+      currentSession.typeMode = typeMode;
+      currentSession.sourceMode = sourceMode;
+      currentSession.currentIndex = 0;
+      currentSession.correctCount = 0;
+      currentSession.batchDrawings = [];
+
+      let pool = [];
+      if (sourceMode === 'wrong') {
+        pool = [...wrongBank];
+      } else {
+        if (targetMode === 'single') {
+          pool = SINGLE_BOPOMOFO.map(b => ({ bopomofo: b, tts: b }));
+        } else {
+          pool = [...wordList];
+        }
+      }
+      pool.sort(() => Math.random() - 0.5);
+      currentSession.questions = pool.slice(0, 10);
+
+      startTimer();
+
+      if (typeMode === 'mcq') {
+        switchView('view-mcq');
+        renderMCQQuestion();
+      } else {
+        switchView('view-handwriting');
+        renderHandwritingQuestion();
+      }
+    }
+
+    function startTimer() {
+      currentSession.startTime = Date.now();
+      if (currentSession.timerInterval) clearInterval(currentSession.timerInterval);
+      currentSession.timerInterval = setInterval(() => {
+        let elapsed = Math.floor((Date.now() - currentSession.startTime) / 1000);
+        let m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        let s = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('mcq-timer').textContent = `${m}:${s}`;
+        document.getElementById('hw-timer').textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (currentSession.timerInterval) clearInterval(currentSession.timerInterval);
+    }
+
+// --- MCQ Logic ---
+function renderMCQQuestion() {
+  let q = currentSession.questions[currentSession.currentIndex];
+  
+  // 每次載入新題目時，重置「一次答對」的標記
+  currentSession.isFirstAttempt = true;
+
+  document.getElementById('mcq-q-count').textContent = currentSession.currentIndex + 1;
+  
+  // 計算已完成題目的正確率
+  let accuracy = currentSession.currentIndex === 0 ? 100 : Math.round((currentSession.correctCount / currentSession.currentIndex) * 100);
+  document.getElementById('mcq-accuracy').textContent = accuracy;
+
+  speak(q.tts);
+
+  let options = [q];
+  let fullPool = currentSession.targetMode === 'single' ? 
+    SINGLE_BOPOMOFO.map(b => ({ bopomofo: b, tts: b })) : wordList;
+
+  while(options.length < 4 && fullPool.length >= 4) {
+    let rand = fullPool[Math.floor(Math.random() * fullPool.length)];
+    if (!options.some(o => o.bopomofo === rand.bopomofo)) {
+      options.push(rand);
+    }
+  }
+  options.sort(() => Math.random() - 0.5);
+
+  let container = document.getElementById('options-container');
+  container.innerHTML = '';
+  options.forEach(opt => {
+    let card = document.createElement('div');
+    card.className = 'option-card';
+    card.textContent = opt.bopomofo;
+    card.onclick = () => checkMCQAnswer(opt, q);
+    container.appendChild(card);
+  });
+}
+
+function checkMCQAnswer(selected, target) {
+  if (selected.bopomofo === target.bopomofo) {
+    // === 答對了 ===
+    playAudioTone(600, 'sine', 0.15);
+
+    // 只有「一次就答對」才能拿到分數、星星與移除錯題
+    if (currentSession.isFirstAttempt) {
+      currentSession.correctCount++;
+      stars += 1;
+      updateNavBadges();
+      removeFromWrongBank(target);
+    }
+
+    // 切換到下一題
+    currentSession.currentIndex++;
+    if (currentSession.currentIndex < currentSession.questions.length) {
+      renderMCQQuestion();
+    } else {
+      stopTimer();
+      let finalAccuracy = Math.round((currentSession.correctCount / currentSession.questions.length) * 100);
+      alert(`🎉 練習完成！\n總共 10 題，一次答對 ${currentSession.correctCount} 題\n最終正確率：${finalAccuracy}%\n共獲得 ${currentSession.correctCount} 顆星星！`);
+      switchView('view-menu');
+    }
+
+  } else {
+    // === 答錯了 ===
+    playAudioTone(200, 'square', 0.25);
+
+    // 第一次選錯時：標記失敗（取消本題得分資格）並存入錯題本
+    if (currentSession.isFirstAttempt) {
+      currentSession.isFirstAttempt = false; 
+      addToWrongBank(target);
+    }
+
+    // 播放提示音，但不推進題目，讓孩子留在原題繼續選到對為止
+    let msg = `你選的是 ${selected.tts}，題目是 ${target.tts}，請重新選擇。`;
+    speak(msg);
+  }
+}
+
+    // --- Handwriting & Canvas Logic ---
+    function initCanvas() {
+      canvas = document.getElementById('hw-canvas');
+      ctx = canvas.getContext('2d');
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#2C3E50';
+
+      function getPos(e) {
+        let rect = canvas.getBoundingClientRect();
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+      }
+
+      function startDraw(e) { isDrawing = true; let p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+      function moveDraw(e) { if (!isDrawing) return; let p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+      function endDraw() { isDrawing = false; }
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', moveDraw);
+      canvas.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('touchstart', startDraw);
+      canvas.addEventListener('touchmove', moveDraw);
+      canvas.addEventListener('touchend', endDraw);
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function renderHandwritingQuestion() {
+      clearCanvas();
+      document.getElementById('answer-panel').classList.remove('visible');
+      document.getElementById('hw-next-btn').style.display = 'none';
+      document.getElementById('hw-q-count').textContent = currentSession.currentIndex + 1;
+
+      let q = currentSession.questions[currentSession.currentIndex];
+      speak(q.tts);
+    }
+
+    function revealAnswer() {
+      let q = currentSession.questions[currentSession.currentIndex];
+      let panel = document.getElementById('answer-panel');
+      document.getElementById('answer-bopomofo').textContent = q.bopomofo;
+      panel.classList.add('visible');
+      document.getElementById('hw-next-btn').style.display = 'inline-block';
+    }
+
+    function nextHandwritingQuestion() {
+      let q = currentSession.questions[currentSession.currentIndex];
+      currentSession.batchDrawings.push({
+        question: q,
+        imgData: canvas.toDataURL()
+      });
+
+      currentSession.currentIndex++;
+      if (currentSession.currentIndex < currentSession.questions.length) {
+        renderHandwritingQuestion();
+      } else {
+        finishHandwritingSession();
+      }
+    }
+
+    function finishHandwritingSession() {
+      stopTimer();
+      switchView('view-batch-grading');
+      renderBatchGradingList();
+    }
+
+    // --- Batch Grading Page ---
+    function renderBatchGradingList() {
+      let container = document.getElementById('grading-list');
+      container.innerHTML = '';
+
+      if (currentSession.batchDrawings.length === 0) {
+        container.innerHTML = '<div style="text-align:center;">沒有錄入的手寫紀錄。</div>';
+        return;
+      }
+
+      currentSession.batchDrawings.forEach((item, index) => {
+        let row = document.createElement('div');
+        row.className = 'grading-item';
+        row.innerHTML = `
+          <div><strong>第 ${index + 1} 題：</strong></div>
+          <img class="grading-img" src="${item.imgData}" width="120" height="90">
+          <div>正確答案：<span style="font-size:1.3rem; font-weight:bold; color:var(--primary);">${item.question.bopomofo}</span></div>
+          <div>
+            <label style="margin-right:10px; font-weight:bold; color:green;">
+              <input type="radio" name="grade-${index}" value="correct" checked> ✔ 正確
+            </label>
+            <label style="font-weight:bold; color:red;">
+              <input type="radio" name="grade-${index}" value="wrong"> ✖ 錯誤
+            </label>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function submitBatchGrading() {
+      let correct = 0;
+      currentSession.batchDrawings.forEach((item, index) => {
+        let val = document.querySelector(`input[name="grade-${index}"]:checked`).value;
+        if (val === 'correct') {
+          correct++;
+          stars += 2;
+          removeFromWrongBank(item.question);
+        } else {
+          addToWrongBank(item.question);
+        }
+      });
+
+      updateNavBadges();
+      alert(`✅ 批改完成！孩子共答對 ${correct} 題手寫題，獲得 ${correct * 2} 顆星星獎勵！`);
+      switchView('view-menu');
+    }
+
+    // --- Wrong Bank Management ---
+    function addToWrongBank(item) {
+      if (!wrongBank.some(w => w.bopomofo === item.bopomofo)) {
+        wrongBank.push(item);
+        updateNavBadges();
+      }
+    }
+
+    function removeFromWrongBank(item) {
+      wrongBank = wrongBank.filter(w => w.bopomofo !== item.bopomofo);
+      updateNavBadges();
+    }
+
+    function renderWrongBankList() {
+      let container = document.getElementById('wrong-bank-list');
+      container.innerHTML = '';
+      if (wrongBank.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748B;">🎉 目前沒有錯題，太棒了！</div>';
+        return;
+      }
+      wrongBank.forEach(item => {
+        let div = document.createElement('div');
+        div.style.cssText = 'display:inline-block; padding:8px 16px; margin:5px; background:#FEE2E2; border-radius:8px; font-weight:bold; font-size:1.2rem; color:#991B1B;';
+        div.textContent = item.bopomofo;
+        container.appendChild(div);
+      });
+    }
+
+    function startWrongPractice() {
+      if (wrongBank.length === 0) {
+        alert("目前的錯題本是空的！");
+        return;
+      }
+      document.querySelector('input[name="mode-source"][value="wrong"]').checked = true;
+      switchView('view-menu');
+    }
+
+    function clearWrongBank() {
+      if (confirm("確定要清空錯題本嗎？")) {
+        wrongBank = [];
+        updateNavBadges();
+        renderWrongBankList();
+      }
+    }
+
+    // --- Parent Vocabulary Management (新增與管理功能) ---
+    function renderWordListManager() {
+      let container = document.getElementById('word-list-container');
+      container.innerHTML = '';
+      wordList.forEach((item, index) => {
+        let span = document.createElement('span');
+        span.className = 'word-manage-item';
+        span.innerHTML = `
+          <strong>${item.bopomofo}</strong> (${item.tts})
+          <span style="color:red; cursor:pointer; font-weight:bold; margin-left:4px;" onclick="deleteWord(${index})">×</span>
+        `;
+        container.appendChild(span);
+      });
+      document.getElementById('word-count-badge').textContent = wordList.length;
+    }
+
+    function addSingleWord() {
+      let bopo = document.getElementById('add-word-bopo').value.trim();
+      let tts = document.getElementById('add-word-tts').value.trim();
+
+      if (!bopo || !tts) {
+        alert("請完整輸入「注音」與「國字/朗讀文字」！");
+        return;
+      }
+
+      wordList.push({ bopomofo: bopo, tts: tts });
+      updateNavBadges();
+      renderWordListManager();
+      
+      document.getElementById('add-word-bopo').value = '';
+      document.getElementById('add-word-tts').value = '';
+      alert(`✅ 成功新增詞語：${bopo} (${tts})`);
+    }
+
+    function importBatchWords() {
+      let text = document.getElementById('batch-word-input').value.trim();
+      if (!text) {
+        alert("請輸入要匯入的文字！");
+        return;
+      }
+
+      let lines = text.split('\n');
+      let count = 0;
+      lines.forEach(line => {
+        let parts = line.split(',');
+        if (parts.length >= 2) {
+          let bopo = parts[0].trim();
+          let tts = parts[1].trim();
+          if (bopo && tts) {
+            wordList.push({ bopomofo: bopo, tts: tts });
+            count++;
+          }
+        }
+      });
+
+      updateNavBadges();
+      renderWordListManager();
+      document.getElementById('batch-word-input').value = '';
+      alert(`✅ 成功批次匯入 ${count} 個詞語！`);
+    }
+
+    function deleteWord(index) {
+      wordList.splice(index, 1);
+      updateNavBadges();
+      renderWordListManager();
+    }
+
+    function resetDefaultWords() {
+      if (confirm("確定要將詞庫恢復為預設的康軒國語詞庫嗎？（自訂詞語將會被取代）")) {
+        wordList = [...DEFAULT_KANGXUAN_WORDS];
+        updateNavBadges();
+        renderWordListManager();
+        alert("✅ 已恢復為康軒國語預設詞庫！");
+      }
+    }
+
+    // --- Store & Rewards ---
+    function renderRewardsList() {
+      let container = document.getElementById('rewards-list');
+      container.innerHTML = '';
+      rewards.forEach(item => {
+        let row = document.createElement('div');
+        row.className = 'reward-item';
+        row.innerHTML = `
+          <div><strong>${item.title}</strong></div>
+          <div>
+            <span class="star-badge">⭐ ${item.cost}</span>
+            <button class="btn btn-secondary" style="margin-left:15px; padding:6px 14px;" onclick="redeemReward(${item.cost}, '${item.title}')">兌換</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function redeemReward(cost, title) {
+      if (stars < cost) {
+        alert(`星星不夠喔！還需要 ${cost - stars} 顆星星。`);
+        return;
+      }
+      let pass = prompt("請請家長輸入 4 位數解鎖密碼以核准兌換：");
+      if (pass === parentPass) {
+        stars -= cost;
+        updateNavBadges();
+        alert(`🎉 兌換成功！已扣除 ${cost} 顆星星，請享用「${title}」！`);
+      } else if (pass !== null) {
+        alert("❌ 密碼錯誤！");
+      }
+    }
+
+    // --- Parent Admin Vault ---
+    function openParentAdmin() {
+      switchView('view-parent-admin');
+      document.getElementById('parent-auth').style.display = 'block';
+      document.getElementById('parent-content').style.display = 'none';
+      document.getElementById('parent-pass-input').value = '';
+    }
+
+    function checkParentPassword() {
+      let input = document.getElementById('parent-pass-input').value;
+      if (input === parentPass) {
+        document.getElementById('parent-auth').style.display = 'none';
+        document.getElementById('parent-content').style.display = 'block';
+        renderAdminRewardsList();
+        renderWordListManager();
+      } else {
+        alert("❌ 密碼錯誤！");
+      }
+    }
+
+    function adjustStars(amount) {
+      stars = Math.max(0, stars + amount);
+      updateNavBadges();
+    }
+
+    function renderAdminRewardsList() {
+      let container = document.getElementById('admin-rewards-list');
+      container.innerHTML = '';
+      rewards.forEach((item, index) => {
+        let row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;';
+        row.innerHTML = `
+          <span>${item.title} (⭐ ${item.cost})</span>
+          <button class="btn btn-danger" style="padding:4px 10px; font-size:0.85rem;" onclick="deleteReward(${index})">刪除</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function addRewardItem() {
+      let title = document.getElementById('new-reward-title').value.trim();
+      let cost = parseInt(document.getElementById('new-reward-cost').value);
+      if (title && !isNaN(cost)) {
+        rewards.push({ id: Date.now(), title: title, cost: cost });
+        localStorage.setItem('bopo_rewards', JSON.stringify(rewards));
+        document.getElementById('new-reward-title').value = '';
+        document.getElementById('new-reward-cost').value = '';
+        renderAdminRewardsList();
+        renderRewardsList();
+      }
+    }
+
+    function deleteReward(index) {
+      rewards.splice(index, 1);
+      localStorage.setItem('bopo_rewards', JSON.stringify(rewards));
+      renderAdminRewardsList();
+      renderRewardsList();
+    }
+
+    function changeParentPassword() {
+      let newPass = document.getElementById('new-parent-pass').value.trim();
+      if (newPass.length === 4) {
+        parentPass = newPass;
+        localStorage.setItem('bopo_parent_pass', parentPass);
+        alert("✅ 密碼修改成功！");
+        document.getElementById('new-parent-pass').value = '';
+      } else {
+        alert("請輸入 4 位數密碼。");
+      }
+    }
+	// ⬇️ ⬇️ ⬇️ 請將下面這段程式碼「直接貼在下方」 ⬇️ ⬇️ ⬇️
+      function exportDataBackup() {
+        const data = {
+          stars: stars,
+          wrongBank: wrongBank,
+          wordList: wordList,
+          rewards: rewards,
+          parentPass: parentPass
+        };
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bopomofo_backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function importDataBackup(event) {
+		  const file = event.target.files[0];
+		  if (!file) return;
+
+		  const reader = new FileReader();
+		  reader.onload = function(e) {
+			try {
+			  const data = JSON.parse(e.target.result);
+			  if (data.wordList && Array.isArray(data.wordList)) {
+				// 1. 更新記憶體變數
+				stars = data.stars || 0;
+				wrongBank = data.wrongBank || [];
+				wordList = data.wordList;
+				rewards = data.rewards || rewards;
+				parentPass = data.parentPass || parentPass;
+
+				// 2. 關鍵：同步寫入瀏覽器快取 (localStorage)
+				localStorage.setItem('bopo_stars', stars);
+				localStorage.setItem('bopo_wrong_bank', JSON.stringify(wrongBank));
+				localStorage.setItem('bopo_word_list', JSON.stringify(wordList));
+				localStorage.setItem('bopo_rewards', JSON.stringify(rewards));
+				localStorage.setItem('bopo_parent_pass', parentPass);
+
+				// 3. 刷新 UI 畫面
+				updateNavBadges();
+				renderWordListManager();
+				renderAdminRewardsList();
+				alert("✅ 備份資料已成功還原並存入瀏覽器！");
+			  } else {
+				alert("❌ 備份檔案格式不正確！");
+			  }
+			} catch (err) {
+			  alert("❌ 讀取檔案失敗！");
+			}
+		  };
+  reader.readAsText(file);
+}
+      // ⬆️ ⬆️ ⬆️ 貼上結束 ⬆️ ⬆️ ⬆️
+    function endPractice() {
+      if (confirm("確定要結束目前的練習嗎？")) {
+        stopTimer();
+        switchView('view-menu');
+      }
+    }
+	
+  </script>
+</body>
+</html>
