@@ -216,12 +216,12 @@
     </div>
   </header>
 
-  <!-- Speech Settings Bar -->
+	<!-- Speech Settings Bar -->
   <div class="speech-controls">
     <div>
       <label>🔊 語速控制：</label>
-      <input type="range" id="speech-rate" min="0.4" max="1.0" step="0.05" value="1.0" onchange="updateRateLabel(this.value)">
-      <span id="rate-val">1.0x (慢速)</span>
+      <input type="range" id="speech-rate" min="0.4" max="1.5" step="0.05" value="1.0" onchange="updateRateLabel(this.value)">
+      <span id="rate-val">1.0x (正常)</span>
     </div>
     <div>
       <label>🗣️ 語音聲音庫：</label>
@@ -614,9 +614,15 @@
 	  synth.speak(utter);
 	}
 
-    function updateRateLabel(val) {
-      document.getElementById('rate-val').textContent = `${val}x (${val < 0.7 ? '慢速' : '正常'})`;
-    }
+	function updateRateLabel(val) {
+	  let speedText = '正常';
+	  if (val < 0.9) {
+		speedText = '慢速';
+	  } else if (val > 1.1) {
+		speedText = '快速';
+	  }
+	  document.getElementById('rate-val').textContent = `${val}x (${speedText})`;
+	}
 
     function replayAudio() {
       let q = currentSession.questions[currentSession.currentIndex];
