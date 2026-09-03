@@ -263,7 +263,7 @@
 		  <h3>4. 練習題數設定：</h3>
 		  <label>
 			🔢 請輸入本次練習題數 (1~100 題)：
-			<input type="number" id="question-count-input" min="1" max="100" value="10" style="width: 80px; padding: 6px; font-size: 1rem; border-radius: 6px; border: 1px solid #CCC; text-align: center;">
+			<input type="number" id="question-count-input" min="1" max="100" value="25" style="width: 80px; padding: 6px; font-size: 1rem; border-radius: 6px; border: 1px solid #CCC; text-align: center;">
 		  </label>
 		</div>
 
@@ -676,7 +676,7 @@
 	  let sourceMode = document.querySelector('input[name="mode-source"]:checked').value;
 
 	  // 讀取並驗證家長設定的題數 (1~100)
-	  let qCountInput = parseInt(document.getElementById('question-count-input').value) || 10;
+	  let qCountInput = parseInt(document.getElementById('question-count-input').value) || 25;
 	  let qCount = Math.max(1, Math.min(100, qCountInput));
 
 	  // 更新介面上的總題數顯示
