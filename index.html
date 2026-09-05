@@ -249,6 +249,12 @@
       </div>
 
       <div style="margin: 20px 0;">
+		<h3>2. 題目設定：</h3>
+		<label style="font-size: 18px; cursor: pointer;">
+		  <input type="checkbox" id="toggle-confusing" checked style="width: 18px; height: 18px;">
+		  🎯 開啟易混淆音干擾 (例如：ㄣ/ㄥ、ㄕ/ㄙ 強制同時出現)
+		</label>
+		<br><br>
         <h3>2. 選擇題型：</h3>
         <label><input type="radio" name="mode-type" value="mcq" checked> 🔘 聽音選字卡 (選擇題)</label><br><br>
         <label><input type="radio" name="mode-type" value="handwriting"> ✍️ 聽寫魔法板 (手寫題)</label>
@@ -456,7 +462,19 @@
       'ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ',
       'ㄧ','ㄨ','ㄩ'
     ];
-
+	// 易混淆注音對照組
+	const CONFUSING_PAIRS = {
+	  "ㄣ": ["ㄥ"], "ㄥ": ["ㄣ"],
+	  "ㄢ": ["ㄤ"], "ㄤ": ["ㄢ"],
+	  "ㄟ": ["ㄝ"], "ㄝ": ["ㄟ"],
+	  "ㄛ": ["ㄡ"], "ㄡ": ["ㄛ"],
+	  "ㄧ": ["ㄩ"], "ㄩ": ["ㄧ"],
+	  "ㄕ": ["ㄙ"], "ㄙ": ["ㄕ"],
+	  "ㄓ": ["ㄗ"], "ㄗ": ["ㄓ"],
+	  "ㄔ": ["ㄘ"], "ㄘ": ["ㄔ"],
+	  "ㄅ": ["ㄉ"], "ㄉ": ["ㄅ"],
+	  "ㄆ": ["ㄊ"], "ㄊ": ["ㄆ"]
+	};
     // 康軒國語首冊 / 一上常見基礎詞庫預設資料
     const DEFAULT_KANGXUAN_WORDS = [
       { bopomofo: "ㄌㄠˇ ㄕ", tts: "老師" },
@@ -744,19 +762,28 @@
 // --- MCQ Logic ---
 function renderMCQQuestion() {
   let q = currentSession.questions[currentSession.currentIndex];
-  
-  // 每次載入新題目時，重置「一次答對」的標記
   currentSession.isFirstAttempt = true;
 
   document.getElementById('mcq-q-count').textContent = currentSession.currentIndex + 1;
-  
-  // 計算已完成題目的正確率
   let accuracy = currentSession.currentIndex === 0 ? 100 : Math.round((currentSession.correctCount / currentSession.currentIndex) * 100);
   document.getElementById('mcq-accuracy').textContent = accuracy;
 
   speak(q.tts);
 
   let options = [q];
+  let isConfusingEnabled = document.getElementById('toggle-confusing') ? document.getElementById('toggle-confusing').checked : true;
+
+  // 判斷：若使用者有勾選開關，且抽到易混淆注音，強制將相似音加入選項
+  if (isConfusingEnabled && currentSession.targetMode === 'single' && CONFUSING_PAIRS[q.bopomofo]) {
+    let similarChars = CONFUSING_PAIRS[q.bopomofo];
+    similarChars.forEach(char => {
+      if (options.length < 4) {
+        options.push({ bopomofo: char, tts: char });
+      }
+    });
+  }
+
+  // 剩餘位置從全體音庫隨機補滿至 4 個選項
   let fullPool = currentSession.targetMode === 'single' ? 
     SINGLE_BOPOMOFO.map(b => ({ bopomofo: b, tts: b })) : wordList;
 
@@ -766,6 +793,8 @@ function renderMCQQuestion() {
       options.push(rand);
     }
   }
+
+  // 打亂 4 個選項位置
   options.sort(() => Math.random() - 0.5);
 
   let container = document.getElementById('options-container');
