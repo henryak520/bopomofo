@@ -584,34 +584,51 @@
       }
     }
 
-	// 靜態全域音檔物件，避免重複建立導致播放重疊或延遲
+// 1. 預先建立音檔快取物件池 (Audio Pool)，網頁載入時就準備好
+const AUDIO_CACHE = {};
+if (typeof BOPOMOFO_AUDIO_MAP !== 'undefined') {
+  Object.keys(BOPOMOFO_AUDIO_MAP).forEach(char => {
+    let audio = new Audio(BOPOMOFO_AUDIO_MAP[char]);
+    audio.preload = 'auto'; // 強制瀏覽器預載入音檔
+    AUDIO_CACHE[char] = audio;
+  });
+}
+
+	// 靜態全域音檔物件，避免重複播放
 	let currentAudioPlayer = null;
 
 	function speak(text, callback) {
-	  // 1. 如果輸入的是「單個注音符號」，且對照表中有對應的 WAV 音檔
-	  if (BOPOMOFO_AUDIO_MAP[text]) {
-		// 停止正在播放的電腦語音 (TTS)
-		if (synth.speaking) synth.cancel();
+	  // 停止正在播放的 TTS 語音
+	  if (window.speechSynthesis && window.speechSynthesis.speaking) {
+		window.speechSynthesis.cancel();
+	  }
 
-		// 如果前一個 WAV 音檔還在放，先暫停並歸零
-		if (currentAudioPlayer) {
-		  currentAudioPlayer.pause();
-		  currentAudioPlayer.currentTime = 0;
+	  // 如果前一個 WAV 音檔還在放，先暫停並歸零
+	  if (currentAudioPlayer) {
+		currentAudioPlayer.pause();
+		currentAudioPlayer.currentTime = 0;
+	  }
+
+	  // 1. 如果輸入的是「單個注音符號」，且快取池中有對應音檔
+	  if (AUDIO_CACHE[text]) {
+		currentAudioPlayer = AUDIO_CACHE[text];
+
+		// 重置播放進度至開頭
+		currentAudioPlayer.currentTime = 0;
+
+		// 連動介面上的語速滑桿（如果有的話）
+		let rateElem = document.getElementById('speech-rate');
+		if (rateElem) {
+		  currentAudioPlayer.playbackRate = parseFloat(rateElem.value);
 		}
-
-		// 建立新音檔並播放
-		currentAudioPlayer = new Audio(BOPOMOFO_AUDIO_MAP[text]);
-
-		// 支援速度調整（連動介面上的語速滑桿）
-		let rate = parseFloat(document.getElementById('speech-rate').value);
-		currentAudioPlayer.playbackRate = rate;
 
 		if (callback) {
 		  currentAudioPlayer.onended = callback;
 		}
 
+		// 直接播放快取好的物件（體感接近 0 延遲）
 		currentAudioPlayer.play().catch(err => {
-		  console.warn("WAV 音檔播放失敗，切換為備用電腦語音：", err);
+		  console.warn("WAV 音檔快取播放失敗，切換為備用電腦語音：", err);
 		  speakTTS(text, callback);
 		});
 
